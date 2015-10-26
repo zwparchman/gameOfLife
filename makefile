@@ -2,10 +2,10 @@ OFLAGS = -Ofast -flto -march=native
 CC=g++
 STD=-std=c++14
 CFLAGS=  -g -c -W -Wall -Wextra $(STD) -Wno-missing-field-initializers -Wshadow \
-				 -I/usr/include/SDL2 \
+				 `sdl2-config --cflags` \
 				 -fopenmp \
 				$(OFLAGS)
-LFLAGS= -g $(STD) $(OFLAGS)  -L/usr/lib/x86_64-linux-gnu/ -lSDL2 -pthread -fopenmp
+LFLAGS= -g $(STD) $(OFLAGS)  `sdl2-config --libs` -pthread -fopenmp
 
 .PHONY:clean 
 
@@ -21,10 +21,6 @@ $(Objects): %.o: %.cpp
 
 dbg: program
 	gdb program
-
-
-Timer.o:Timer.cpp
-	$(CC) $(CFLAGS) Timer.cpp
 
 run: program
 	./program
