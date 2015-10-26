@@ -327,11 +327,10 @@ void rand_row( Map &_map,  int row, int seed ){
   }
 }
 
-uint32_t gray_by_value( float in){
+uint32_t gray_by_value( SDL_PixelFormat * format, float in){
   uint8_t val = in*255;
-  uint32_t ret = val;
-  ret = ret << 8 | ret;
-  ret = ret << 16 | ret;
+
+  uint32_t ret = SDL_MapRGB( format, val, val, val);
   return ret;
 }
 
@@ -359,7 +358,7 @@ int main(){
   float up_to_date_gray = 0.5f;
   float oldest_gray = 0.25f;
   float update_grayness = up_to_date_gray;
-  uint32_t current_color = gray_by_value( update_grayness );
+  uint32_t current_color = gray_by_value( root->format, update_grayness );
 
   ERR_PRINT( SDL_FillRect( root, NULL, current_color ) );
   ERR_PRINT( SDL_UpdateWindowSurface( window ) );
@@ -388,6 +387,8 @@ int main(){
 
   future<int> fut = std::async(std::launch::async, do_step);
 
+  Timer timer;
+  timer.start();
   while(true){
     if( need_new_surface ){
       need_new_surface = false;
@@ -415,7 +416,7 @@ int main(){
   }
 
 
-    current_color = gray_by_value( clamp(update_grayness , oldest_gray, up_to_date_gray));
+    current_color = gray_by_value( root->format, clamp(update_grayness , oldest_gray, up_to_date_gray));
     ERR_PRINT( SDL_FillRect( root, NULL, current_color ) );
 
     if( ! paused ){
@@ -434,6 +435,10 @@ int main(){
     }
 
   }
+
+  timer.stop();
+  cout<<"Performed "<<i<<" steps of a grid with a side lenth of "<<side_length<<
+    " in "<<timer.getTime()<<" seconds"<<endl;
 
   SDL_Quit();
 
