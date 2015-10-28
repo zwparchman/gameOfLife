@@ -1,70 +1,11 @@
-#include <limits.h>
-#include <future>
-#include <algorithm>
-#include <iostream>
-#include <vector>
 #include <SDL.h>
-#include <random>
-#include <array>
-#include <bitset>
-#include "Timer.h"
-
 
 #define COUT(x) " "#x": "<<(x)
+#include "common.cpp"
 using namespace std;
 
-const int side_length=400;
-
-typedef random_device rand_dev;
-//typedef mt19937 rand_dev;
-
-struct Map {
-  vector<bool> data;
-
-  Map(){
-    data.resize(side_length*side_length);
-  }
-
-  bool get( int row, int col ) const {
-    return data[row*side_length+col];
-  }
-  void set( int row, int col, bool on){
-    data[row*side_length+col] = on;
-  }
-
-  void set_wrap( int row, int col, bool on){
-    if( row < 0 ) row += side_length;
-    if( col < 0 ) col += side_length;
-    set( row % side_length, col % side_length, on);
-  }
-
-  bool get_wrap( int row, int col ) const {
-    row = row % side_length;
-    col = col % side_length;
-    if( row < 0 ) row += side_length;
-    if( col < 0 ) col += side_length;
-    return get( row, col );
-  }
-
-  size_t size() const {
-    return side_length;
-  }
-};
-
-void swap( Map &a, Map&b ){
-  swap(a.data, b.data);
-}
-
-
-std::uniform_int_distribution<int> distro(0,100);
 
 #define ERR_PRINT(x) if(x) { cout << SDL_GetError() << endl; SDL_ClearError();  }
-
-
-Map map;
-Map back;
-
-
 
 int pixel_shift = 3;
 unsigned int frame_time=10; //unsigned since <0 is an error
@@ -76,7 +17,6 @@ bool working = false;
 bool single_step = false;
 bool need_new_surface=false;
 bool fullscreen = false;
-SDL_GameController * controler = NULL;
 
 //starting window size is set here, this is runtime resizable
 int window_x = 1200;
@@ -126,91 +66,6 @@ void display( SDL_Surface *root, const Map &_map){
       if( _map.get(i,j) ){
         ERR_PRINT(SDL_FillRect( root, &r , 0x00000000 ));
       }
-    }
-  }
-}
-
-int neighbors( const Map &_map, int i, int j){
-  int ret=0;
-  for( int r=-1; r<=1; r++){
-    int modr = (i+r)%side_length;
-    if( modr < 0 ){
-      modr+= side_length;
-    }
-    for( int c=-1; c<=1; c++){
-      if( r==0 && c==0 ) continue;
-
-      int modc = (j+c)%side_length;
-      if( modc < 0 ){
-        modc+= side_length;
-      }
-      if( _map.get(modr, modc)){
-        ret++;
-      }
-    }
-  }
-  return ret;
-}
-
-inline bool game_of_life( const Map &_map, int row, int col ){
-  int n = neighbors( _map, row, col);
-
-  switch( n ){
-    case 0: case 1:
-      return false;
-    case 2:
-      return _map.get(row,col);
-    case 3:
-      return true;
-    default:
-      return false;
-  }
-}
-
-inline bool day_night( const Map &_map, int row, int col){
-  const int n = neighbors( _map, row, col);
-  const bool live = _map.get(row,col);
-
-  vector<int> come_alive = {3,6,8};
-  //vector<int> stay_alive = {3,4,6,8};
-
-  if( std::any_of( come_alive.begin(), come_alive.end(), [=](int x){return n==x;}))
-    return true;
-
-  if( live && n == 4 )
-    return true;
-
-  return false;
-}
-
-inline bool seeds( const Map &_map, int row, int col){
-  int n = neighbors( _map, row, col);
-  if( n == 2){
-    return true;
-  }
-  return false;
-}
-
-
-inline bool no_death( const Map &_map, int row, int col){
-  int n = neighbors( _map, row, col);
-  int ret=_map.get(row,col);
-  if( n == 3){
-    ret= true;
-  }
-  return ret;
-}
-
-
-inline bool newState( const Map &_map, int row, int col ){
-  return game_of_life( _map, row, col );
-}
-
-void update( Map &_map, Map &_back ){
-#pragma omp parallel for
-  for( size_t i=0; i<side_length; i++){
-    for( size_t j=0; j<side_length; j++){
-      _back.set(i,j, newState(_map, i, j));
     }
   }
 }
@@ -317,16 +172,6 @@ bool input(){
   return false;
 }
 
-const int live_chance = 5;
-
-void rand_row( Map &_map,  int row, int seed ){
-  mt19937 rand;
-  rand.seed( seed );
-  for( size_t i=0; i<side_length; i++){
-    _map.set(row, i, distro(rand) < live_chance );
-  }
-}
-
 uint32_t gray_by_value( SDL_PixelFormat * format, float in){
   uint8_t val = in*255;
 
@@ -334,20 +179,10 @@ uint32_t gray_by_value( SDL_PixelFormat * format, float in){
   return ret;
 }
 
-
-
 int main(){
   cout<<"Begin-----------"<<endl;
 
-  rand_dev mt;
-#pragma omp parallel for
-  for( size_t i=0; i< map.size(); i++){
-    int seed; 
-#pragma omp critical
-    seed = distro(mt);
-
-    rand_row( map, i, seed);
-  }
+  gen_map();
 
   if( SDL_Init( SDL_INIT_EVERYTHING ) ){ cout << SDL_GetError() << endl; SDL_ClearError(); }
 
