@@ -5,8 +5,6 @@ CFLAGS=  -g -c -W -Wall -Wextra $(STD) -Wno-missing-field-initializers -Wshadow 
 				 -fopenmp \
 				$(OFLAGS)
 
-
-
 NO_SDL_LFLAGS= -g $(STD) $(OFLAGS)   -pthread -fopenmp
 SDL_LFLAGS = `sdl2-config --libs` $(NO_SDL_LFLAGS) 
 

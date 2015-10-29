@@ -1,4 +1,3 @@
-
 #ifndef  Map_INC
 #define  Map_INC
 
@@ -37,7 +36,7 @@ struct Map {
     bool is_set = where->set;
     if( is_set == on ) return;
 
-    int direction = ((int)on) * 2 - 1;
+    unsigned char direction = ((int)on) * 2 - 1;
 
     where->set = on;
     //manual unroling of setting neighboring counts
