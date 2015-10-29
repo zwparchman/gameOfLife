@@ -17,7 +17,8 @@ using namespace std;
 typedef random_device rand_dev;
 //typedef mt19937 rand_dev;
 
-std::uniform_int_distribution<int> distro(0,100);
+std::uniform_int_distribution<int> idistro( INT_MIN, INT_MAX);
+std::bernoulli_distribution distro(live_chance / 100.0f);
 
 void swap( Map &a, Map&b ){
   swap(a.data, b.data);
@@ -26,32 +27,8 @@ void swap( Map &a, Map&b ){
 Map map;
 Map back;
 
-int neighbors( const Map &_map, int i, int j){
-  int ret=0;
-  for( int r=-1; r<=1; r++){
-    int modr = (i+r)%side_length;
-    if( modr < 0 ){
-      modr+= side_length;
-    }
-    for( int c=-1; c<=1; c++){
-      if( r==0 && c==0 ) continue;
-
-      int modc = (j+c)%side_length;
-      if( modc < 0 ){
-        modc+= side_length;
-      }
-      if( _map.get(modr, modc)){
-        ret++;
-      }
-    }
-  }
-  return ret;
-}
-
 inline bool game_of_life( const Map &_map, int row, int col ){
-  int n = neighbors( _map, row, col);
-
-  switch( n ){
+  switch( _map.neighbors(row, col)){
     case 0: case 1:
       return false;
     case 2:
@@ -63,6 +40,7 @@ inline bool game_of_life( const Map &_map, int row, int col ){
   }
 }
 
+#if  0     /* ----- #if 0 : If0Label_1 ----- */
 inline bool day_night( const Map &_map, int row, int col){
   const int n = neighbors( _map, row, col);
   const bool live = _map.get(row,col);
@@ -98,6 +76,8 @@ inline bool no_death( const Map &_map, int row, int col){
 }
 
 
+#endif     /* ----- #if 0 : If0Label_1 ----- */
+
 inline bool newState( const Map &_map, int row, int col ){
   return game_of_life( _map, row, col );
 }
@@ -111,11 +91,14 @@ void update( Map &_map, Map &_back ){
   }
 }
 
-void rand_row( Map &_map,  int row, int seed ){
+inline void rand_row( Map &_map,  int row, int seed ){
   mt19937 rand;
   rand.seed( seed );
   for( size_t i=0; i<side_length; i++){
-    _map.set(row, i, distro(rand) < live_chance );
+    bool be_alive = distro(rand) ;
+    if( be_alive){
+      _map.set(row, i, be_alive);
+    }
   }
 }
 
@@ -125,10 +108,8 @@ void gen_map(){
     for( size_t i=0; i< map.size(); i++){
       int seed; 
       #pragma omp critical
-      seed = distro(mt);
+      seed = idistro(mt);
 
       rand_row( map, i, seed);
     }
 }
-
-

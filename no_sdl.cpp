@@ -1,8 +1,6 @@
 #include "config.h"
 #include "common.cpp"
 
-const int iterations = 400;
-
 int main(){
   cout<<"Begin---"<<endl;
 
@@ -12,6 +10,7 @@ int main(){
   gen_timer.stop();
 
 
+  cout<<"Generating the grid took "<<gen_timer.getTime() << " seconds."<<endl;
   main_timer.start();
   for( int i=0; i<iterations; i++){
     update( map, back); 
@@ -19,7 +18,6 @@ int main(){
   }
   main_timer.stop();
 
-  cout<<"Generating the grid took "<<gen_timer.getTime() << " seconds."<<endl;
   cout<<"Performed "<<iterations<<" steps of a grid with a side lenth of "<<side_length<<
     " in "<<main_timer.getTime()<<" seconds."<<endl;
 

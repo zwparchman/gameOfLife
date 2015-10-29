@@ -17,19 +17,19 @@ Objects= $(Base_Objects)
 
 all : $(Objects) no_sdl with_sdl
 
-with_sdl: $(Base_Objects) with_sdl.o
+with_sdl: $(Base_Objects) with_sdl.o 
 	$(CC) $(Std) $(Base_Objects) with_sdl.o $(SDL_LFLAGS) -o with_sdl
 
-no_sdl: $(Base_Objects) no_sdl.o
+no_sdl: $(Base_Objects) no_sdl.o 
 	$(CC) $(Std) $(Base_Objects) no_sdl.o $(NO_SDL_LFLAGS) -o no_sdl
 
 $(Objects): %.o: %.cpp config.h
 	$(CC) $(CFLAGS) $<
 
-with_sdl.o: with_sdl.cpp
+with_sdl.o: with_sdl.cpp common.cpp Map.h config.h
 	$(CC) `sdl2-config --cflags`  with_sdl.cpp $(CFLAGS)
 
-no_sdl.o : no_sdl.cpp
+no_sdl.o : no_sdl.cpp common.cpp Map.h config.h
 	$(CC) $(CFLAGS) no_sdl.cpp
 
 clean:
